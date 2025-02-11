@@ -133,7 +133,7 @@ pub fn matmul_transb(c: &mut Tensor<f32>, beta: f32, a: &Tensor<f32>, b: &Tensor
                 sum += _a[x * k + z] * _b[y * k + z];
             }
             _c[x * j + y] *= beta;
-            _c[x * j + y] += alpha * sum;;
+            _c[x * j + y] += alpha * sum;
         }
     }
 }
