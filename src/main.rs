@@ -8,6 +8,9 @@ mod tensor;
 use std::path::PathBuf;
 use tokenizers::Tokenizer;
 use std::io::{self, Write};
+use tensor::Tensor;
+use operators::{matmul_transb, matmul_transb_avx};
+use std::time::Instant;
 
 fn story() {
     let project_dir = env!("CARGO_MANIFEST_DIR");
@@ -88,13 +91,41 @@ fn chat() {
     }
 }
 
+fn compare_matmul_transb() {
+    // Initialize tensors a, b, c with some data
+    let a = Tensor::<f32>::new(vec![1.0; 1024 * 5120], &Vec::from([1024, 5120]));
+    let b = Tensor::<f32>::new(vec![1.0; 5120 * 256], &Vec::from([256, 5120]));
+    let mut c = Tensor::<f32>::new(vec![0.0; 1024 * 256], &Vec::from([1024, 256]));
+
+    let beta = 0.5;
+    let alpha = 1.0;
+
+    // Time matmul_transb
+    let start = Instant::now();
+    matmul_transb(&mut c, beta, &a, &b, alpha);
+    let duration = start.elapsed();
+
+    println!("matmul_transb took: {:?}", duration);
+
+    // Re-initialize c for the AVX version
+    let mut c_avx = Tensor::<f32>::new(vec![0.0; 1024 * 256], &Vec::from([1024, 256]));
+
+    // Time matmul_transb_avx
+    let start_avx = Instant::now();
+    matmul_transb_avx(&mut c_avx, beta, &a, &b, alpha);
+    let duration_avx = start_avx.elapsed();
+
+    println!("matmul_transb_avx took: {:?}", duration_avx);
+}
+
 fn main() {
-    println!("Choose story or chat model: (1) story, (2) chat");
+    println!("Choose story or chat model: (1) story, (2) chat, (3) matmul_transb performance");
     let mut choice = String::new();
     std::io::stdin().read_line(&mut choice).unwrap();
     match choice.trim() {
         "1" => story(),
         "2" => chat(),
+        "3" => compare_matmul_transb(),
         _ => println!("Invalid choice"),
     }
 }

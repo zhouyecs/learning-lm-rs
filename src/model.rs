@@ -86,9 +86,9 @@ impl Llama<f32> {
             let q = (&mut q_buf).reshape(&vec![seq_len, self.n_q_h * self.dqkv]); // (seq, n_h * dqkv)
             let k = &mut cache.k_cache(layer, past_seq_len); // (seq, n_kv_h * dqkv)
             let v = &mut cache.v_cache(layer, past_seq_len); // (seq, n_kv_h * dqkv)
-            OP::matmul_transb(q, 0., &hidden_states, &self.params.wq[layer], 1.0);
-            OP::matmul_transb(k, 0., &hidden_states, &self.params.wk[layer], 1.0);
-            OP::matmul_transb(v, 0., &hidden_states, &self.params.wv[layer], 1.0);
+            OP::matmul_transb_avx(q, 0., &hidden_states, &self.params.wq[layer], 1.0);
+            OP::matmul_transb_avx(k, 0., &hidden_states, &self.params.wk[layer], 1.0);
+            OP::matmul_transb_avx(v, 0., &hidden_states, &self.params.wv[layer], 1.0);
             OP::rope(
                 q.reshape(&vec![seq_len, self.n_q_h, self.dqkv]),
                 past_seq_len,
@@ -122,7 +122,7 @@ impl Llama<f32> {
 
             // out = attn_V @ O_weight.T
             // residual = out + residual
-            OP::matmul_transb(
+            OP::matmul_transb_avx(
                 &mut residual,
                 1.0,
                 &hidden_states,
@@ -156,7 +156,7 @@ impl Llama<f32> {
             self.eps,
         );
 
-        OP::matmul_transb(&mut logits, 0., &hidden_states, &self.params.lm_head, 1.0);
+        OP::matmul_transb_avx(&mut logits, 0., &hidden_states, &self.params.lm_head, 1.0);
 
         logits
     }
@@ -284,10 +284,10 @@ fn mlp(
 ) {
     // todo!("Implement mlp");
     OP::rms_norm(hidden_states, residual, rms_w, eps);
-    OP::matmul_transb(gate, 0., hidden_states, w_gate, 1.0);
-    OP::matmul_transb(up, 0., hidden_states, w_up, 1.0);
+    OP::matmul_transb_avx(gate, 0., hidden_states, w_gate, 1.0);
+    OP::matmul_transb_avx(up, 0., hidden_states, w_up, 1.0);
     OP::swiglu(up, gate);
-    OP::matmul_transb(residual, 1.0, up, w_down, 1.0);
+    OP::matmul_transb_avx(residual, 1.0, up, w_down, 1.0);
 }
 
 #[test]
