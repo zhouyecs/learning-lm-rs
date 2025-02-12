@@ -1,5 +1,5 @@
 ## 模型结构: self-attention & 文本生成
-首先是$Q*K^T$，观察矩阵维度$(seq_len, n_kv_h * n_groups * dqkv) @ (total_seq, n_kv_h * dqkv)^T$，满足倍数关系，矩阵乘时可以对$head$除$n\_groups$
+首先是Q*K^T，观察矩阵维度(seq_len, n_kv_h * n_groups * dqkv) @ (total_seq, n_kv_h * dqkv)^T，满足倍数关系，矩阵乘时可以对head除n\_groups
 
 `forward`中，按照提示补充`self_attention`，`matmul_transb_avx`和`mlp`函数即可。
 
