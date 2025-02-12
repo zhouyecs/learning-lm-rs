@@ -19,8 +19,45 @@
 ## avx
 使用avx指令集来加速矩阵乘法，简单起见直接考虑机器是否支持avx指令集和是否能被8整除，每次步长为8
 
-对比普通矩阵乘：
-![alt text](src/img/image3.png)
+```rust
+// https://doc.rust-lang.org/core/arch/index.html
+#[cfg(target_arch = "x86_64")]
+use std::arch::x86_64::*;
+pub fn matmul_transb_avx(c: &mut Tensor<f32>, beta: f32, a: &Tensor<f32>, b: &Tensor<f32>, alpha: f32) {
+    let a_shape = a.shape();
+    let b_shape = b.shape();
+    let (i, j, k) = (a_shape[0], b_shape[0], a_shape[1]);
+
+    let _c = unsafe { c.data_mut() };
+    let _a = a.data();
+    let _b = b.data();
+
+    if is_x86_feature_detected!("avx2") && k % 8 == 0 {
+        unsafe {
+            for x in 0..i {
+                for y in 0..j {
+                    let mut sum_vec = _mm256_setzero_ps();
+                    for z in (0..k).step_by(8) {
+                        let a_vec = _mm256_loadu_ps(_a.as_ptr().add(x * k + z));
+                        let b_vec = _mm256_loadu_ps(_b.as_ptr().add(y * k + z));
+                        sum_vec   = _mm256_fmadd_ps(a_vec, b_vec, sum_vec);
+                    }
+                    let mut sum_arr = [0.0; 8];
+                    _mm256_storeu_ps(sum_arr.as_mut_ptr(), sum_vec);
+                    let sum = sum_arr.iter().sum::<f32>();
+
+                    _c[x * j + y] *= beta;
+                    _c[x * j + y] += alpha * sum;
+                }
+            }
+        }
+    } else {
+        ......
+    }
+}
+```
+
+
 通过test：
 ![alt text](src/img/image4.png)
 
