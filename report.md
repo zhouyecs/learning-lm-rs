@@ -64,6 +64,7 @@ pub fn matmul_transb_avx(c: &mut Tensor<f32>, beta: f32, a: &Tensor<f32>, b: &Te
 
 ## egui
 简单起见，这里使用rust的egui，我的想法就是两个不同的按钮，对应story和chat功能，点击story可以直接输出结果，点击chat还需要先手动输入。
+
 ![alt text](src/img/image5.png)
 ![alt text](src/img/image6.png)
 ![alt text](src/img/image7.png)
