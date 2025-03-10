@@ -216,10 +216,10 @@ impl App for MyApp {
                 }
             }
 
-            if ui.button("Matmul Performance").clicked() {
-                self.selected_option = 3;
-                self.matmul_output.run_matmul();
-            }
+            // if ui.button("Matmul Performance").clicked() {
+            //     self.selected_option = 3;
+            //     self.matmul_output.run_matmul();
+            // }
 
             if self.selected_option == 1 {
                 ui.heading("Story Output");
@@ -244,12 +244,15 @@ impl App for MyApp {
 
                 ui.label("Assistant:");
                 ui.label(&self.chat_state.response);
+
+                // clean the response
+                self.chat_state.response.clear();
             }
 
-            if self.selected_option == 3 {
-                ui.heading("Matmul Performance");
-                ui.label(self.matmul_output.get_output());
-            }
+            // if self.selected_option == 3 {
+            //     ui.heading("Matmul Performance");
+            //     ui.label(self.matmul_output.get_output());
+            // }
         });
     }
 }
